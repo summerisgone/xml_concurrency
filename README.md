@@ -40,5 +40,36 @@
 3. Проверка быстродействия
 
    ```
-   time make all
+   make all
    ```
+
+## Тестовый вывод (10 ядер)
+
+```
+> make all
+python generate.py --zip=5000 --xml=1000
+time python parse.py --cpu=1
+       14,33 real        12,88 user         0,41 sys
+time python parse.py
+        2,08 real        17,01 user         0,89 sys
+head -n5 levels.csv
+b2c18f7a-5642-4972-9d97-cb2032e5cc4a;80
+79260ef2-4732-4b4a-ae51-666820b6b63b;46
+cc541092-0ac7-4c5d-bcf8-dcee3fe96f78;36
+88a994ad-6ff4-48bb-872f-2bffd18e43bd;26
+cf96b10f-d91e-41bc-95c7-ac1f9f895f9d;23
+head -n11 objects.csv
+b2c18f7a-5642-4972-9d97-cb2032e5cc4a;e47a754c-33fb-49d4-b490-80e1c2326ef5
+b2c18f7a-5642-4972-9d97-cb2032e5cc4a;c16cfebb-d610-49f8-af9b-bd5f0798c89b
+b2c18f7a-5642-4972-9d97-cb2032e5cc4a;67c222cd-8109-4fd6-90dd-46f6dffeb32b
+b2c18f7a-5642-4972-9d97-cb2032e5cc4a;87d62f71-dc91-4caa-82f1-c6ddffedc457
+b2c18f7a-5642-4972-9d97-cb2032e5cc4a;75b39ecc-042a-42d4-9065-2bbc0a4f307d
+b2c18f7a-5642-4972-9d97-cb2032e5cc4a;81ce6b8a-5739-4adb-9bad-76edcf9b3d49
+b2c18f7a-5642-4972-9d97-cb2032e5cc4a;a4fa9907-0dc6-45d8-b7f7-e4573f16dde0
+b2c18f7a-5642-4972-9d97-cb2032e5cc4a;304330b9-a254-46db-907c-c8a65fcb6367
+b2c18f7a-5642-4972-9d97-cb2032e5cc4a;60b79eac-ee36-4c8c-bf0d-755cb47fd2f2
+79260ef2-4732-4b4a-ae51-666820b6b63b;17a3e68d-5b55-4ca5-94d3-dc4a20986e72
+79260ef2-4732-4b4a-ae51-666820b6b63b;a9b8811c-7c44-4f84-96b3-8c45e5d2c46b
+rm *.zip
+rm *.csv
+```
