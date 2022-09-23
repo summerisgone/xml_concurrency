@@ -30,7 +30,7 @@ def generate_xml() -> bytes:
     output.write(f'''<root><var name="id" value="{data['id']}"/><var name="level" value="{data['level']}"/>
     <objects>
     ''')
-    for item in data['objects']:
+    for item in data['objects']:  # type: ignore
         output.write(f'<object name="{item}"/>\n')
     output.write("</objects></root>")
     return output.getvalue().encode('utf-8')
