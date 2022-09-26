@@ -1,16 +1,30 @@
 import argparse
 import io
 import random
+import sys
+from typing import Tuple
 from uuid import uuid4
 from zipfile import ZipFile
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+logger.addHandler(logging.StreamHandler())
 
 
-def generate_files(zip_count: int, xml_count: int) -> None:
+def generate_files(zip_count: int, xml_count: int) -> Tuple[int, str]:
     for i in range(zip_count):
-        with ZipFile(f'archive_{i}.zip', 'w') as archive:
-            for j in range(xml_count):
-                with archive.open(f'xml_{j}.xml', 'w') as xml_file:
-                    xml_file.write(generate_xml())
+        filename = f'archive_{i}.zip'
+        try:
+            with ZipFile(filename, 'w') as archive:
+                logger.info("writing archive %s", filename)
+                for j in range(xml_count):
+                    with archive.open(f'xml_{j}.xml', 'w') as xml_file:
+                        xml_file.write(generate_xml())
+        except OSError as e:
+            logger.error("Error writing file %s", filename)
+            return 1, str(e)
+    return 0, ''
 
 
 def generate_xml() -> bytes:
@@ -40,5 +54,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate zip archives with xml files.')
     parser.add_argument('--zip', type=int, default=50, help='Amount of Zip archives')
     parser.add_argument('--xml', type=int, default=100, help='Amount of XML files in the archive')
+    parser.add_argument('-v', '--verbose', action='count', default=0, help='Verbose logging')
     args = parser.parse_args()
-    generate_files(args.zip, args.xml)
+    if args.verbose:
+        logger.setLevel(logging.DEBUG)
+    ret_code, message = generate_files(args.zip, args.xml)
+    if ret_code != 0:
+        sys.stderr.write(message)
+        sys.exit(ret_code)
+    elif message:
+        sys.stderr.write(message)

@@ -7,6 +7,11 @@ from os.path import join
 from typing import IO, Optional, List, Tuple
 from xml.etree.ElementTree import ParseError
 from zipfile import ZipFile, BadZipFile
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+logger.addHandler(logging.StreamHandler())
 
 
 class ArchiveResult:
@@ -81,14 +86,19 @@ def read_archive(zip_filename: str):
 
 
 def main(work_dir, cpu_count=None, levels_filename='levels.csv', objects_filename='objects.csv') -> Tuple[int, str]:
-    if not len(glob(join(work_dir, '*.zip'))):
+    archives_list = glob(join(work_dir, '*.zip'))
+    if not len(archives_list):
         return 1, 'No archives found'
+    logger.debug("%s archives found", len(archives_list))
     try:
         errors = []
         with open(levels_filename, 'w') as level_stats, open(objects_filename, 'w') as object_stats:
             try:
                 for archive_result in read_dir(work_dir, cpu_count):
-                    if archive_result.status is not ArchiveResult.STATUS_SUCCESS:
+                    if archive_result.status == ArchiveResult.STATUS_SUCCESS:
+                        logger.debug("Reading %s: OK", archive_result.filename)
+                    if archive_result.status != ArchiveResult.STATUS_SUCCESS:
+                        logger.debug("Reading %s: has errors", archive_result.filename)
                         errors += archive_result.errors
                     for xml_file_result in archive_result.xml_results:
                         write_stats(
@@ -98,6 +108,8 @@ def main(work_dir, cpu_count=None, levels_filename='levels.csv', objects_filenam
                             xml_file_result.file_level,
                             xml_file_result.object_ids,
                         )
+                logger.debug('Level stats written to %s', levels_filename)
+                logger.debug('Object stats written to %s', objects_filename)
             except BrokenProcessPool as e:
                 return 1, f'Runtime error: {str(e)}'
         return 0, '\n'.join(errors)
@@ -109,10 +121,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate zip archives with xml files.')
     parser.add_argument('path', type=str, nargs='?', default='.', help='Where to look archives')
     parser.add_argument('--cpu', type=int, default=None, help='Number of CPU cores to run on')
+    parser.add_argument('-v', '--verbose', action='count', default=0, help='Verbose logging')
     args = parser.parse_args()
+    if args.verbose:
+        logger.setLevel(logging.DEBUG)
     ret_code, message = main(args.path, args.cpu)
     if ret_code != 0:
         sys.stderr.write(message)
         sys.exit(ret_code)
     elif message:
+        sys.stderr.write('Errors during parsing:\n')
         sys.stderr.write(message)
